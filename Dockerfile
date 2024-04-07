@@ -34,9 +34,9 @@ ENV CMAKE_VERSION=3.18.2 \
     HARFBUZZ_VERSION=5.0.1 \
     PIXMAN_VERSION=0.40.0 \
     CAIRO_VERSION=1.17.4 \
-    LIBRSVG_VERSION=2.54.4 \
-    LIBRSVG_MINOR_VERSION=2.54 \
-    GDK_PIXBUF_VERSION=2.42.8 \
+    LIBRSVG_VERSION=2.58.0 \
+    LIBRSVG_MINOR_VERSION=2.58 \
+    GDK_PIXBUF_VERSION=2.42.9 \
     GDK_PIXBUF_MINOR_VERSION=2.42 \
     LIBFFI_VERSION=3.3 \
     BZIP2_VERSION=1.0.6 \
@@ -163,10 +163,14 @@ RUN cd glib-* && \
 ENV GDK_PIXBUF_MODULEDIR=${TARGET_DIR}/lib/gdk-pixbuf-loaders \
     GDK_PIXBUF_MODULE_FILE=${TARGET_DIR}/lib/gdk-pixbuf-loaders.cache
 
+# apply patch to fix static builds - from https://gitlab.gnome.org/GNOME/gdk-pixbuf/-/merge_requests/161
+COPY fix_gdk-pixbuf_static_dependencies.patch /tmp/
+
 # builtin_loaders: eh
 RUN cd gdk-pixbuf-* && \
+    patch -p1 -i /tmp/fix_gdk-pixbuf_static_dependencies.patch && \
     meson --prefix ${CACHE_DIR} _build -Dintrospection=disabled -Ddefault_library=static \
-        -Drelocatable=true -Dgio_sniffing=false -Dbuiltin_loaders=jpeg,png -Dinstalled_tests=false && \
+        -Drelocatable=true -Dgio_sniffing=false -Dbuiltin_loaders=jpeg,png -Dinstalled_tests=false -Dman=false && \
     ninja -C _build && \
     ninja -C _build install
 
